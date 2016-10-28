@@ -1,23 +1,23 @@
 import random
 import numpy as np
 from scipy.signal import convolve2d
+import random
+
 
 
 # game_grid = np.zeros((6, 7))
 
-def game_state(initial_grid, color, column_number):
-
+def update_game_state(initial_grid, color, column_number):
     # color = 1. 2
     # column_number = 1..7
-
     active_column = initial_grid[:, column_number]
     zeros_within_column = active_column == 0
     nonzero_coordinates = np.nonzero(zeros_within_column)
     line_number = np.max(nonzero_coordinates)
 
-    final_grid = initial_grid
+    final_grid = initial_grid.copy()
     final_grid[line_number, column_number] = color
-
+    print final_grid
     return  final_grid
 
 
@@ -64,13 +64,17 @@ def player_won(game_grid):
         return -1
 
 #define function to start game, no arguments
-def play_connect4():
+#number_of_players = raw_input("please enter the number of players")
+def play_connect4(player1_steps=[], player2_steps=[]):
+    #transfer function
     #reset game grid to contain all zeroes
     game_grid = np.zeros((6,7))
 
     result = 0 #initialize result of game to zero to set while loop
 
     player_number = 1 #this should be altered in every iteration through thw while loop
+
+    force_end_game = False
 
 #use while loop instead of for loop to since there is no set range, only a condition (result == 0)
     while result == 0:
@@ -81,19 +85,53 @@ def play_connect4():
 
         print game_grid  # will recognize winning patterns
 
-        player_turn = int(raw_input('column number - between 1 and 7 \n')) - 1
+        player_turn = None
+
+
+
+        if player1_steps and player_number == 1:
+            player_turn = player1_steps.pop()
+            if player1_steps == [] and player2_steps == []:
+                print 'force quit flag set'
+                force_end_game = True
+
+        if player2_steps and player_number == 2:
+            player_turn = player2_steps.pop()
+            if player2_steps == [] and player1_steps == []:
+                print 'force quit flag set'
+                force_end_game = True
+
+
+        if player_turn is None:
+            print 'player turn demanded'
+            player_turn = int(raw_input('column number - between 1 and 7 \n')) - 1
         #player picks a column and we subtract one since indexing starts at o
 
-        game_grid = game_state(game_grid, player_number, player_turn)
-        #this function is what allows the chip to be dropped with thr proper number depending on which player is playing, 1 or 2
+
+
+        game_grid = update_game_state(game_grid, player_number, player_turn)
+        print 'game grid updated'
+        #this function is what allows the chip to be dropped with the proper number depending on which player is playing, 1 or 2
         result = player_won(game_grid)
+        print 'win determined'
         #change the value of result once someone wins to exit out of the while loop
+
+
+
+        if force_end_game:
+            print 'force quit forced'
+            break
 
         if player_number == 1:
             player_number = 2
             #switch turns
         else:
             player_number = 1
+
+
+
+    return game_grid
+
 
 if __name__ == "__main__":
     play_connect4() #call function to start the game
