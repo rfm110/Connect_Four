@@ -4,8 +4,8 @@ from scipy.signal import convolve2d
 import random
 
 
-
 # game_grid = np.zeros((6, 7))
+
 
 def update_game_state(initial_grid, color, column_number):
     # color = 1. 2
@@ -17,7 +17,6 @@ def update_game_state(initial_grid, color, column_number):
 
     final_grid = initial_grid.copy()
     final_grid[line_number, column_number] = color
-    print final_grid
     return  final_grid
 
 
@@ -47,27 +46,76 @@ def player_won(game_grid):
     for pattern in pattern_list:
         player_1_score = convolve2d(player_1_pattern, pattern, 'valid')
         if np.max(player_1_score) == 4:
-            print 'Player 1 won!'
             return 1
 
         player_2_score = convolve2d(player_2_pattern, pattern, 'valid')
         if np.max(player_2_score) == 4:
-            print 'Player 2 won!'
             return 2
 
     if np.any(game_grid==0):
-        print 'Next turn'
         return 0
 
     else:
-        print "It's a draw!"
         return -1
 
-#define function to start game, no arguments
-#number_of_players = raw_input("please enter the number of players")
-def play_connect4(player1_steps=[], player2_steps=[]):
-    #transfer function
-    #reset game grid to contain all zeroes
+def choose_next_step(game_state, player_number):
+    """
+    picks the best options for plays by the computer using artificial intelligence
+    :param game_state:
+    :param player_number:
+    :return:
+    """
+
+    #initialize list for preferred moves
+    possible_moves = []
+    winning_moves = []
+
+
+    me = player_number
+    if player_number == 1:
+       other_player = 2
+    else:
+        other_player = 1
+    #begin for loop that iterates through the columns on the grid
+    qualifying_column_level_1 = np.arange(0, 7, 1)
+    qualifying_mask = game_state[0, :] == 0
+    qualifying_column_level_1 = qualifying_column_level_1[qualifying_mask].tolist()
+
+    for column_number in qualifying_column_level_1:
+        other_player_wins = False
+        main_grid = update_game_state(game_state, me, column_number)
+
+        if player_won(main_grid) == me:
+            winning_moves.append(column_number)
+        else:
+            qualifying_mask = main_grid[0, :] == 0
+            qualifying_column_level_2 = np.arange(0, 7, 1)
+            qualifying_column_level_2 = qualifying_column_level_2[qualifying_mask].tolist()
+            for possible_column in qualifying_column_level_2:
+            #for possible_column in range(0, 7):
+                current_grid = update_game_state(main_grid, other_player, possible_column)
+                #new_game_grid = update_game_state(game_grid, 1, possible_column)
+
+                if player_won(current_grid) == other_player:
+                    other_player_wins = True
+                    break
+            if other_player_wins == False:
+                possible_moves.append(column_number)
+
+    if winning_moves != []:
+        return random.choice(winning_moves)
+
+    if winning_moves == [] and possible_moves == []:
+        return random.choice(qualifying_column_level_1)
+
+    return random.choice(possible_moves)
+
+
+def play_connect4(player1_steps=[], player2_steps=[], human_player1 = True, human_player2 = True):
+
+
+
+
     game_grid = np.zeros((6,7))
 
     result = 0 #initialize result of game to zero to set while loop
@@ -76,7 +124,7 @@ def play_connect4(player1_steps=[], player2_steps=[]):
 
     force_end_game = False
 
-#use while loop instead of for loop to since there is no set range, only a condition (result == 0)
+    #use while loop instead of for loop to since there is no set range, only a condition (result == 0)
     while result == 0:
     #result will only change when a player wins
 
@@ -89,13 +137,14 @@ def play_connect4(player1_steps=[], player2_steps=[]):
 
 
 
-        if player1_steps and player_number == 1:
+        if player1_steps != [] and player_number == 1:
             player_turn = player1_steps.pop()
             if player1_steps == [] and player2_steps == []:
                 print 'force quit flag set'
                 force_end_game = True
+            #not manually entered moves, player can be either artificial or real
 
-        if player2_steps and player_number == 2:
+        if player2_steps != [] and player_number == 2:
             player_turn = player2_steps.pop()
             if player2_steps == [] and player1_steps == []:
                 print 'force quit flag set'
@@ -103,20 +152,41 @@ def play_connect4(player1_steps=[], player2_steps=[]):
 
 
         if player_turn is None:
-            print 'player turn demanded'
-            player_turn = int(raw_input('column number - between 1 and 7 \n')) - 1
+           # print 'player turn demanded'
+            if player_number == 1:
+                print 'player 1',
+                if human_player1 == True:
+                    print 'human player'
+                    player_turn = int(raw_input('column number - between 1 and 7 \n')) - 1
+                else:
+                    print 'AI player'
+                    player_turn = choose_next_step(game_grid, 1)
+                print 'turn chosen %s' % player_turn
+
+            if player_number == 2:
+                print 'player 2',
+                if human_player2 == True:
+                    print 'human player'
+                    player_turn = int(raw_input('column number - between 1 and 7 \n')) - 1
+                else:
+                    print 'AI player'
+                    player_turn = choose_next_step(game_grid, 2)
+                print 'turn chosen %s' % player_turn
+
         #player picks a column and we subtract one since indexing starts at o
 
-
-
         game_grid = update_game_state(game_grid, player_number, player_turn)
-        print 'game grid updated'
         #this function is what allows the chip to be dropped with the proper number depending on which player is playing, 1 or 2
         result = player_won(game_grid)
-        print 'win determined'
+        if result:
+            if result == -1:
+                print "it's a draw"
+            else:
+                print 'player %s won' % result
+        else:
+            'continue game'
+
         #change the value of result once someone wins to exit out of the while loop
-
-
 
         if force_end_game:
             print 'force quit forced'
@@ -128,13 +198,11 @@ def play_connect4(player1_steps=[], player2_steps=[]):
         else:
             player_number = 1
 
-
-
     return game_grid
 
 
 if __name__ == "__main__":
-    play_connect4() #call function to start the game
+    print play_connect4(human_player2=False) #call function to start the game
 
 
 
