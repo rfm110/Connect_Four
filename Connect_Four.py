@@ -4,9 +4,6 @@ from scipy.signal import convolve2d
 import random
 
 
-# game_grid = np.zeros((6, 7))
-
-
 def update_game_state(initial_grid, color, column_number):
     # color = 1. 2
     # column_number = 1..7
@@ -59,6 +56,7 @@ def player_won(game_grid):
         return -1
 
 def choose_next_step(game_state, player_number):
+
     """
     picks the best options for plays by the computer using artificial intelligence
     :param game_state:
@@ -66,49 +64,74 @@ def choose_next_step(game_state, player_number):
     :return:
     """
 
-    #initialize list for preferred moves
+    #initialize lists for preferred moves(possible moves and winning moves)
     possible_moves = []
     winning_moves = []
 
 
     me = player_number
+
+    #set player number
     if player_number == 1:
+        #"me" is player 1
        other_player = 2
+        #remaining player is player 2
     else:
         other_player = 1
+        #when player number is 2, make other player 1
+
     #begin for loop that iterates through the columns on the grid
     qualifying_column_level_1 = np.arange(0, 7, 1)
+    #build vector starting at 0, ending at 7, with step size 1 (for the 7 columns)
     qualifying_mask = game_state[0, :] == 0
+    #uses game state from row zero all the way to the end for columns that contains zero
     qualifying_column_level_1 = qualifying_column_level_1[qualifying_mask].tolist()
+    #applies qualifying mask to qualifying_column_level_1: all columns that contain 0
 
     for column_number in qualifying_column_level_1:
+        #begin for loop to iterate through column)number in qualifying_column_level_1
         other_player_wins = False
+        #condition does not let other player win
         main_grid = update_game_state(game_state, me, column_number)
+        #update main grid, using possible column numbers from qualifying_column-level_!
 
         if player_won(main_grid) == me:
+            #if the column produces a winning condition for me, append the column number to the winning moves list
             winning_moves.append(column_number)
         else:
             qualifying_mask = main_grid[0, :] == 0
+            #new qualifying mask based on the updated main grid
             qualifying_column_level_2 = np.arange(0, 7, 1)
+            #build vector starting at 0, ending at 7, with step size 1 (for the 7 columns)
             qualifying_column_level_2 = qualifying_column_level_2[qualifying_mask].tolist()
+            #apply qualifying mask to qualifying_column_level_2, all columns that contain zero
+
             for possible_column in qualifying_column_level_2:
             #for possible_column in range(0, 7):
                 current_grid = update_game_state(main_grid, other_player, possible_column)
-                #new_game_grid = update_game_state(game_grid, 1, possible_column)
+                #new game grid using with using qualifying_column_level_2
 
                 if player_won(current_grid) == other_player:
+                    #if this produces a winning condition for the other player, other_player_wins = 0, break out of loop
                     other_player_wins = True
                     break
+
             if other_player_wins == False:
+                #if it does not produce a winning condition for the other player, append column number to possible_moves
                 possible_moves.append(column_number)
 
     if winning_moves != []:
         return random.choice(winning_moves)
+    #if winning moves is not empty, randomly pick a column number that produces a winning condition for "me"
 
     if winning_moves == [] and possible_moves == []:
         return random.choice(qualifying_column_level_1)
+    #if winning moves is empty and possible moves is empty, randomly select a column using qualifying_column_level_1
+    #which will provide a column number that is not completely full
 
     return random.choice(possible_moves)
+    #if possible moves is not empty, randomly pick a column number from possible moves
+
 
 
 def play_connect4(player1_steps=[], player2_steps=[], human_player1 = True, human_player2 = True):
@@ -203,75 +226,3 @@ def play_connect4(player1_steps=[], player2_steps=[], human_player1 = True, huma
 
 if __name__ == "__main__":
     print play_connect4(human_player2=False) #call function to start the game
-
-
-
-# player_A = int(raw_input("Pick a position from 1 to 7, starting from the left, in which to drop your disk")) - 1
-#
-#
-# try:
-#     player = int(player_A)
-# except:
-#     print "your input is invalid"
-
-
-# random.randint(1, 7)
-
-#if __name__ == "__main__":
-    # test_grid_1 = np.zeros((6, 7))
-    # out_grid_1 = game_state(test_grid_1, 1, 5)
-    # print out_grid_1
-    # out_grid_2 = game_state(out_grid_1, 2, 5)
-    # print out_grid_2
-    #
-    # test_grid_2a = np.zeros((6, 7))
-    # test_grid_2a[5,[0, 1, 2, 3]]=1
-    # test_grid_2b = np.zeros((6, 7))
-    # test_grid_2b[5,[0, 1, 2, 3]]=2
-    #
-    #
-    # #testing for column pattern
-    # test_grid_3a = np.zeros((6, 7))
-    # test_grid_3a[[0, 1, 2, 3],[0]]=1
-    # test_grid_3b = np.zeros((6, 7))
-    # test_grid_3b[[0, 1, 2, 3],[0]]=2
-    #
-    #
-    # #test for diagonals
-    # test_grid_4a = np.zeros((6, 7))
-    # #np.fill_diagonal(test_grid_4a, 1)
-    # #test_grid_4a[0,0]=0
-    # #test_grid_4a[1,1]=0
-    # #test_grid_4b = np.zeros((6, 7))
-    # #np.fill_diagonal(test_grid_4b, 2)
-    # #test_grid_4b[0,0]=0
-    # #test_grid_4b[1,1]=0
-    # d1 = np.ones((4, 4))
-    # d2 = np.diag(d1)
-    # d2 = np.diag(d2)
-    # d3 = np.rot90(d2)
-    # d2 = np.pad(d2, ((2,0), (0,3)), 'constant', constant_values=0)
-    # print d2
-    # test_grid_4a = test_grid_4a + d2
-    # print test_grid_4a
-    #
-    # test_grid_4b = np.zeros((6, 7))
-    #
-    #
-    # d3 = np.pad(d3, ((2,0), (0,3)), 'constant', constant_values=0)
-    # test_grid_4b = test_grid_4b + d3
-    #
-    # print test_grid_2a
-    # print test_grid_2b
-    # print test_grid_3a
-    # print test_grid_3b
-    # print test_grid_4a
-    # print test_grid_4b
-    #
-    # player_won(test_grid_2a)
-    # player_won(test_grid_2b)
-    # player_won(test_grid_3a)
-    # player_won(test_grid_3b)
-    # player_won(test_grid_4a)
-    # player_won(test_grid_4b)
-    #
