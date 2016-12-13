@@ -76,7 +76,7 @@ class ConnectFourTester(unittest.TestCase):
         print "result 1"
         print actual_result
         # actual_result = choose_next_step(actual_result, 1)
-        actual_result = Recursive_connect4.recursive_choose_next_step(actual_result, 1, 2)
+        actual_result = Recursive_connect4.recursive_choose_next_step(actual_result, 1, 2)[1]
         print "result 2"
         print("artificial intelligence" , actual_result)
         expected_results = [0, 4]
@@ -87,10 +87,12 @@ class ConnectFourTester(unittest.TestCase):
         player_2_steps = [5, 6, 3]
         actual_result = play_connect4(player_1_steps, player_2_steps)
         actual_result = Recursive_connect4.recursive_choose_next_step(actual_result, 1, 2)[1]
-        #actual result should be the winning move which is [4]
         print(actual_result)
         expected_result = [4]
         self.assertTrue(actual_result in expected_result)
+
+    def test_recursive_zero_moves(self):
+        player_1_steps = [1,2,3,5,6,7]
 
 
 
